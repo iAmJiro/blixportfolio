@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import emailjs from "@emailjs/browser";
 import Button from "../components/Button";
 
 const services = [
@@ -56,15 +57,21 @@ const timeline = [
   },
 ];
 
+const initialForm = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+};
+
 function About() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
+  const [form, setForm] = useState(initialForm);
+  const [sending, setSending] = useState(false);
+
+  const [status, setStatus] = useState({
+    type: "",
     message: "",
   });
-
-  const [submitted, setSubmitted] = useState(false);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -73,11 +80,66 @@ function About() {
       ...previous,
       [name]: value,
     }));
+
+    if (status.message) {
+      setStatus({ type: "", message: "" });
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true);
+
+    if (sending) return;
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceId || !templateId || !publicKey) {
+      setStatus({
+        type: "error",
+        message:
+          "The contact form is not configured yet. Please contact me directly by email.",
+      });
+      return;
+    }
+
+    setSending(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: form.name.trim(),
+          from_email: form.email.trim(),
+          subject: form.subject.trim(),
+          message: form.message.trim(),
+        },
+        {
+          publicKey,
+        }
+      );
+
+      setStatus({
+        type: "success",
+        message:
+          "Thank you! Your enquiry has been sent successfully. I'll get back to you as soon as possible.",
+      });
+
+      setForm({ ...initialForm });
+    } catch (error) {
+      console.error("EmailJS submission failed:", error);
+
+      setStatus({
+        type: "error",
+        message:
+          "Sorry, your message couldn't be sent. Please try again or contact me directly by email.",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -114,6 +176,7 @@ function About() {
               <p className="font-display text-3xl text-gold">
                 Est. 2018
               </p>
+
               <p className="mt-1 text-xs uppercase tracking-widest text-muted">
                 Capturing stories
               </p>
@@ -255,6 +318,7 @@ function About() {
           </div>
 
           <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr]">
+            {/* CONTACT INFORMATION */}
             <div>
               <p className="body-copy max-w-md">
                 Have a project in mind, a question about
@@ -265,6 +329,7 @@ function About() {
               <div className="mt-10 space-y-8">
                 <div>
                   <p className="eyebrow mb-3">Email</p>
+
                   <a
                     href="mailto:hello@example.com"
                     className="text-lg text-cream hover:text-gold"
@@ -275,6 +340,7 @@ function About() {
 
                 <div>
                   <p className="eyebrow mb-3">Phone</p>
+
                   <a
                     href="tel:+10000000000"
                     className="text-lg text-cream hover:text-gold"
@@ -318,14 +384,15 @@ function About() {
               </div>
             </div>
 
+            {/* CONTACT FORM */}
             <div className="border border-outline bg-background p-6 sm:p-9">
               <h3 className="font-display text-3xl">
                 Send an enquiry
               </h3>
 
               <p className="mt-3 text-sm leading-7 text-muted">
-                This is a frontend demonstration form.
-                No message will be sent.
+                Tell me a little about your project, and
+                I'll get back to you as soon as possible.
               </p>
 
               <form
@@ -346,9 +413,12 @@ function About() {
                       name="name"
                       type="text"
                       required
+                      maxLength={100}
+                      disabled={sending}
                       value={form.name}
                       onChange={updateField}
                       placeholder="Your name"
+                      autoComplete="name"
                       className="form-field"
                     />
                   </div>
@@ -366,9 +436,12 @@ function About() {
                       name="email"
                       type="email"
                       required
+                      maxLength={254}
+                      disabled={sending}
                       value={form.email}
                       onChange={updateField}
                       placeholder="you@example.com"
+                      autoComplete="email"
                       className="form-field"
                     />
                   </div>
@@ -387,6 +460,8 @@ function About() {
                     name="subject"
                     type="text"
                     required
+                    maxLength={150}
+                    disabled={sending}
                     value={form.subject}
                     onChange={updateField}
                     placeholder="Tell me about your project"
@@ -406,7 +481,10 @@ function About() {
                     id="contact-message"
                     name="message"
                     required
+                    minLength={10}
+                    maxLength={5000}
                     rows={6}
+                    disabled={sending}
                     value={form.message}
                     onChange={updateField}
                     placeholder="I'd love to hear your ideas..."
@@ -414,19 +492,40 @@ function About() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full sm:w-auto">
-                  Preview Submission ↗
+                <Button
+                  type="submit"
+                  disabled={sending}
+                  className="w-full sm:w-auto"
+                >
+                  {sending ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-background/30 border-t-background" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Enquiry ↗"
+                  )}
                 </Button>
 
-                {submitted && (
+                {/* STATUS MESSAGE */}
+                {status.message && (
                   <div
                     role="status"
-                    className="border border-gold/40 bg-gold/10 p-4 text-sm leading-7 text-cream"
+                    aria-live="polite"
+                    className={`mt-5 border p-4 text-sm leading-7 ${
+                      status.type === "success"
+                        ? "border-green-500/40 bg-green-500/10 text-green-300"
+                        : "border-red-500/40 bg-red-500/10 text-red-300"
+                    }`}
                   >
-                    Form completed for demonstration.
-                    Your message has not been sent.
+                    {status.message}
                   </div>
                 )}
+
+                <p className="text-xs leading-6 text-muted">
+                  Your information will only be used to
+                  respond to your enquiry.
+                </p>
               </form>
             </div>
           </div>
