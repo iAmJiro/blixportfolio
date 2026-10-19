@@ -1,0 +1,148 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, Arial, sans-serif;
+  color: #f1e9df;
+  background: #100d0b;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #100d0b;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+}
+
+::selection {
+  background: #a47b55;
+  color: #100d0b;
+}
+
+:focus-visible {
+  outline: 2px solid #d5ad80;
+  outline-offset: 4px;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #100d0b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #49362a;
+  border-radius: 20px;
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12;
+  }
+
+  .section-padding {
+    @apply py-20 md:py-28;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.3em] text-gold;
+  }
+
+  .display-heading {
+    @apply font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl;
+  }
+
+  .section-heading {
+    @apply font-display text-4xl leading-tight sm:text-5xl lg:text-6xl;
+  }
+
+  .body-copy {
+    @apply text-sm leading-8 text-muted sm:text-base;
+  }
+
+  .form-field {
+    @apply w-full rounded-sm border border-outline bg-background px-4 py-3.5 text-cream outline-none transition-colors placeholder:text-muted/60 focus:border-gold;
+  }
+}
+
+.photo-placeholder {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at 28% 20%,
+      rgba(255, 255, 255, 0.08),
+      transparent 55%
+    ),
+    linear-gradient(
+      145deg,
+      #777777 0%,
+      #555555 50%,
+      #393939 100%
+    );
+}
+
+.photo-placeholder::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.photo-placeholder-label {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.page-enter {
+  animation: fadeUp 650ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
